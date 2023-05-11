@@ -1,0 +1,36 @@
+[package]
+name = "bcsp-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["stackinspector"]
+license = "MPL-2.0"
+repository = "https://github.com/Berylsoft/bcsp"
+
+[lib]
+name = "bcsp_core"
+path = "lib.rs"
+
+[dependencies]
+foundations = { path = "../../foundations", features = [
+    "xor",
+    # "now",
+    # "timestamp",
+    # "usize-casting",
+    # "map-util",
+    "byterepr",
+    # "bytes-read",
+    # "num-compress",
+    # "case-convert",
+    # "const-bytes-equal",
+    # "key-index",
+    # "key-index-map",
+
+    # "const-assert",
+    # "concat-string",
+    # "error-enum",
+    # "num-enum",
+    "byterepr-macros",
+] }
+keccak-core = { path = "../../keccak-core", features = ["zeroize-on-drop"] }
+curve25519-dalek = "4.0.0-rc.2"
+zeroize = "1"

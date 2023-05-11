@@ -1,8 +1,8 @@
 use keccak_core::{KeccakState, KeccakF};
 
-pub struct CShake {
+pub struct CShake<C: CShakeCustom> {
     ctx: KeccakState<KeccakF>,
-    pub custom: CShakeCustom,
+    _phantom: core::marker::PhantomData<C>,
 }
 
 pub fn init(name: &[u8], custom_string: &[u8]) -> KeccakState<KeccakF> {
@@ -24,14 +24,14 @@ pub fn init(name: &[u8], custom_string: &[u8]) -> KeccakState<KeccakF> {
     }
 }
 
-impl CShake {
+impl<C: CShakeCustom> CShake<C> {
     #[inline]
     pub fn absorb(&mut self, input: &[u8]) {
         self.ctx.absorb(input);
     }
 
     #[inline]
-    pub fn chain_absorb(mut self, input: &[u8]) -> CShake {
+    pub fn chain_absorb(mut self, input: &[u8]) -> CShake<C> {
         self.ctx.absorb(input);
         self
     }
@@ -66,48 +66,40 @@ impl CShake {
     }
 }
 
-// TODO: trait
-#[allow(non_camel_case_types)]
-pub enum CShakeCustom {
-    DSA_SK_DERIVE        ,
-    DSA_XSIGN_HASH       ,
-    DSA_EDSIGN_R_HASH    ,
-    DSA_EDSIGN_K_HASH    ,
-    DH_RNG               ,
-    HANDSHAKE_PRE_MASK   ,
-    HANDSHAKE_CIPHER     ,
-    REQ_KEY_DERIVER      ,
-    FRAME_HEADER_CIPHER  ,
-    FRAME_PAYLOAD_CIPHER ,
-    FRAME_HEADER_MAC     ,
-    FRAME_PAYLOAD_MAC    ,
-}
-
-pub use CShakeCustom::*;
-
-impl CShakeCustom {
-    pub const fn as_str(&self) -> &'static str {
-        match self {
-            Self::DSA_SK_DERIVE        => "__bcsp__dsa-sk-derive"        ,
-            Self::DSA_XSIGN_HASH       => "__bcsp__dsa-xsign-hash"       ,
-            Self::DSA_EDSIGN_R_HASH    => "__bcsp__dsa-edsign-r-hash"    ,
-            Self::DSA_EDSIGN_K_HASH    => "__bcsp__dsa-edsign-k-hash"    ,
-            Self::DH_RNG               => "__bcsp__dh-rng"               ,
-            Self::HANDSHAKE_PRE_MASK   => "__bcsp__handshake-pre-mask"   ,
-            Self::HANDSHAKE_CIPHER     => "__bcsp__handshake-cipher"     ,
-            Self::REQ_KEY_DERIVER      => "__bcsp__req-key-deriver"      ,
-            Self::FRAME_HEADER_CIPHER  => "__bcsp__frame-header-cipher"  ,
-            Self::FRAME_PAYLOAD_CIPHER => "__bcsp__frame-payload-cipher" ,
-            Self::FRAME_HEADER_MAC     => "__bcsp__frame-header-mac"     ,
-            Self::FRAME_PAYLOAD_MAC    => "__bcsp__frame-payload-mac"    ,
-        }
-    }
+pub trait CShakeCustom: Sized {
+    const CUSTOM_STRING: &'static str;
 
     #[inline]
-    pub fn create(self) -> CShake {
+    fn create(self) -> CShake<Self> {
         CShake {
-            ctx: init(&[], self.as_str().as_bytes()),
-            custom: self
+            ctx: init(&[], Self::CUSTOM_STRING.as_bytes()),
+            _phantom: core::marker::PhantomData,
         }
     }
+}
+
+macro_rules! cshake_customs {
+    ($($name:ident)*) => {$(
+        #[allow(non_camel_case_types)]
+        pub struct $name;
+
+        impl CShakeCustom for $name {
+            const CUSTOM_STRING: &'static str = concat!("__bcsp__", stringify!($name));
+        }
+    )*};
+}
+
+cshake_customs! {
+    DSA_SK_DERIVE
+    DSA_XSIGN_HASH
+    DSA_EDSIGN_R_HASH
+    DSA_EDSIGN_K_HASH
+    DH_SK_GEN_PRNG
+    HANDSHAKE_PRE_MASK
+    HANDSHAKE_CIPHER
+    REQ_KEY_DERIVE
+    FRAME_HEADER_CIPHER
+    FRAME_PAYLOAD_CIPHER
+    FRAME_HEADER_MAC
+    FRAME_PAYLOAD_MAC
 }

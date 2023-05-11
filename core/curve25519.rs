@@ -3,7 +3,7 @@ use zeroize::Zeroize;
 use foundations::{byterepr::ByteRepr, byterepr_struct};
 use crate::{
     consts::{PK_L, XK_L, SK_L, HASH_L, XSIG_L, EDSIG_L, C25519_PRIM_L},
-    cshake::{CShake, DSA_SK_DERIVE, DSA_EDSIGN_R_HASH, DSA_EDSIGN_K_HASH},
+    cshake::{CShake, CShakeCustom, DSA_SK_DERIVE, DSA_EDSIGN_R_HASH, DSA_EDSIGN_K_HASH, DH_SK_GEN_PRNG},
 };
 
 pub struct XSK {
@@ -116,7 +116,7 @@ impl ByteRepr for EdLikeSignature {
 // region: common
 
 impl XSK {
-    pub fn generate(ctx: &mut CShake) -> XSK {
+    pub fn generate(ctx: &mut CShake<DH_SK_GEN_PRNG>) -> XSK {
         XSK { scalar: Scalar::from_bits_clamped(ctx.squeeze_to_array()) }
     }
 

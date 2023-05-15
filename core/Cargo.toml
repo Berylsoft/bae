@@ -31,6 +31,6 @@ foundations = { path = "../../foundations", features = [
     # "num-enum",
     "byterepr-macros",
 ] }
-keccak-core = { path = "../../keccak-core", features = ["zeroize-on-drop"] }
+cshake = { path = "../../keccak-core/cshake", features = ["zeroize-on-drop"] }
 curve25519-dalek = "4.0.0-rc.2"
 zeroize = "1"

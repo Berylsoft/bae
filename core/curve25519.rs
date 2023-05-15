@@ -24,6 +24,7 @@ pub struct SK {
     nonce: [u8; 32],
 }
 
+#[derive(PartialEq, Eq)]
 pub struct PK {
     edwards: CompressedEdwardsY,
 }

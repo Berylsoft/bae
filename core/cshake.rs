@@ -1,8 +1,10 @@
+use zeroize::Zeroize;
+use foundations::xor::{xor_array, xor};
 use keccak_core::{KeccakState, KeccakF};
 
 pub struct CShake<C: CShakeCustom> {
     ctx: KeccakState<KeccakF>,
-    _phantom: core::marker::PhantomData<C>,
+    custom: C,
 }
 
 pub fn init(name: &[u8], custom_string: &[u8]) -> KeccakState<KeccakF> {
@@ -26,6 +28,11 @@ pub fn init(name: &[u8], custom_string: &[u8]) -> KeccakState<KeccakF> {
 
 impl<C: CShakeCustom> CShake<C> {
     #[inline]
+    pub fn custom(&self) -> &C {
+        &self.custom
+    }
+
+    #[inline]
     pub fn absorb(&mut self, input: &[u8]) {
         self.ctx.absorb(input);
     }
@@ -48,10 +55,36 @@ impl<C: CShakeCustom> CShake<C> {
         buf
     }
 
-    // pub fn squeeze_then_drop<const N: usize>(&mut self) {
-    //     use zeroize::Zeroize;
-    //     self.squeeze_to_array::<N>().zeroize()
-    // }
+    #[inline]
+    pub fn squeeze_to_vec(&mut self, len: usize) -> Vec<u8> {
+        // TODO use MaybeUninit
+        let mut buf = vec![0; len];
+        self.ctx.squeeze(&mut buf);
+        buf
+    }
+
+    // TODO(below 3 methods): necessary to zeroize?
+    // TODO(below 5 methods): inline?
+
+    #[inline]
+    pub fn skip<const N: usize>(&mut self) {
+        self.squeeze_to_array::<N>().zeroize()
+    }
+
+    #[inline]
+    pub fn squeeze_xor_array<const N: usize>(&mut self, dest: &mut [u8; N]) {
+        let mut mask = self.squeeze_to_array();
+        xor_array(dest, &mask);
+        mask.zeroize();
+    }
+
+    #[inline]
+    pub fn squeeze_xor_slice(&mut self, dest: &mut [u8]) {
+        let mut mask = self.squeeze_to_vec(dest.len());
+        // hardcode inline without reslicing because no need to check
+        xor(dest, &mask);
+        mask.zeroize();
+    }
 
     #[inline]
     pub fn once(mut self, input: &[u8], output: &mut [u8]) {
@@ -64,6 +97,14 @@ impl<C: CShakeCustom> CShake<C> {
         self.ctx.absorb(input);
         self.squeeze_to_array()
     }
+
+    #[inline]
+    pub fn squeeze_to_ctx<const N: usize, C2: CShakeCustom>(&mut self, custom: C2) -> CShake<C2> {
+        let mut buf = self.squeeze_to_array::<N>();
+        let ctx = custom.create().chain_absorb(&buf);
+        buf.zeroize();
+        ctx
+    }
 }
 
 pub trait CShakeCustom: Sized {
@@ -73,7 +114,7 @@ pub trait CShakeCustom: Sized {
     fn create(self) -> CShake<Self> {
         CShake {
             ctx: init(&[], Self::CUSTOM_STRING.as_bytes()),
-            _phantom: core::marker::PhantomData,
+            custom: self,
         }
     }
 }

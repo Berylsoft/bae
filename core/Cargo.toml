@@ -13,10 +13,10 @@ path = "lib.rs"
 [dependencies]
 foundations = { path = "../../foundations", features = [
     "xor",
-    # "now",
-    # "timestamp",
+    "now",
+    "timestamp",
     # "usize-casting",
-    # "map-util",
+    "map-util",
     "byterepr",
     # "bytes-read",
     # "num-compress",

@@ -21,18 +21,21 @@ pub const FR_ID_L: usize = 2;
 pub const FR_L_MAX: usize = 0x10000;
 
 pub const CHELLO_L: usize = /*CX*/PK_L;
+pub const SIGNED_PKINFO_L: usize = TS_L + KEYTYPE_L + PK_L + EDSIG_L;
 pub const SHELLO_AHEAD_L: usize = /*SX*/PK_L;
-pub const SHELLO_BEHIND_L: usize = TS_L + /*S*/PK_L + EDSIG_L;
+pub const SHELLO_BEHIND_L: usize = /*S*/SIGNED_PKINFO_L;
 pub const SHELLO_L: usize = SHELLO_AHEAD_L + SHELLO_BEHIND_L;
-pub const CLOGIN_L: usize = TS_L + KEYTYPE_L + /*C*/PK_L + EDSIG_L;
+pub const CLOGIN_L: usize = /*C*/SIGNED_PKINFO_L;
 pub const SLOGINV_L: usize = UID_L + EDSIG_L;
 pub const FR_AHEAD_HEADER_L: usize = REQ_ID_L + FR_LEN_L + /*HEADER*/MAC_L;
 pub const FR_BEHIND_HEADER_L: usize = /*PAYLOAD*/MAC_L + MSG_ID_L + FR_ID_L;
 pub const FR_HEADER_L: usize = FR_AHEAD_HEADER_L + FR_BEHIND_HEADER_L;
 pub const FR_PAYLOAD_L_MAX: usize = FR_L_MAX - FR_HEADER_L;
 
+pub const MAX_LATENCY: i64 = 3;
+
 /// equivalent to `crate::cshake::HANDSHAKE_PRE_MASK.create().once_to_array(&[])`
-pub const HANDSHAKE_PRE_MASK: [u8; PK_L] = [
+pub const HANDSHAKE_PRE_MASK_BYTES: [u8; PK_L] = [
     0x50, 0xa2, 0x9a, 0x88, 0x3b, 0x5b, 0x87, 0x05, 0x15, 0x4d, 0x0e, 0x70, 0x81, 0xec, 0x6d, 0x23,
     0x8d, 0xf9, 0x36, 0x3d, 0x5f, 0x0a, 0x0f, 0x5e, 0x6d, 0x73, 0xc9, 0x2f, 0x41, 0x7a, 0x09, 0xb1,
 ];
@@ -45,6 +48,13 @@ mod tests {
     fn handshake_pre_mask() {
         use crate::cshake::CShakeCustom;
         assert_eq!(crate::cshake::HANDSHAKE_PRE_MASK::CUSTOM_STRING, "__bcsp__HANDSHAKE_PRE_MASK");
-        assert_eq!(HANDSHAKE_PRE_MASK, crate::cshake::HANDSHAKE_PRE_MASK.create().once_to_array(&[]));
+        assert_eq!(HANDSHAKE_PRE_MASK_BYTES, crate::cshake::HANDSHAKE_PRE_MASK.create().once_to_array(&[]));
+    }
+
+    #[test]
+    fn message_len() {
+        use foundations::byterepr::ByteRepr;
+        assert_eq!(SIGNED_PKINFO_L, crate::PKInfo::SIZE);
+        assert_eq!(SLOGINV_L, crate::LoginVerify::SIZE);
     }
 }

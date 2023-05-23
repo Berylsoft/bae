@@ -46,9 +46,9 @@ mod tests {
 
     #[test]
     fn handshake_pre_mask() {
-        use crate::cshake::CShakeCustom;
-        assert_eq!(crate::cshake::HANDSHAKE_PRE_MASK::CUSTOM_STRING, "__bcsp__HANDSHAKE_PRE_MASK");
-        assert_eq!(HANDSHAKE_PRE_MASK_BYTES, crate::cshake::HANDSHAKE_PRE_MASK.create().once_to_array(&[]));
+        use crate::cshake::{CShakeCustom, Once, HANDSHAKE_PRE_MASK};
+        assert_eq!(HANDSHAKE_PRE_MASK::CUSTOM_STRING, "__bcsp__HANDSHAKE_PRE_MASK");
+        assert_eq!(HANDSHAKE_PRE_MASK_BYTES, HANDSHAKE_PRE_MASK.create().once_to_array(&[]));
     }
 
     #[test]

@@ -42,13 +42,13 @@ macro_rules! crypto_byterepr {
     ($($ty:ty => $custom:ty)*) => {$(
         impl $ty {
             pub fn decrypt(mut bytes: <Self as ByteRepr>::Bytes, cipher: &mut CShake<$custom>) -> Self {
-                cipher.squeeze_xor_array(&mut bytes);
+                cipher.squeeze_xor(&mut bytes);
                 Self::from_bytes(bytes)
             }
 
             pub fn encrypt(&self, cipher: &mut CShake<$custom>) -> <Self as ByteRepr>::Bytes {
                 let mut bytes = self.to_bytes();
-                cipher.squeeze_xor_array(&mut bytes);
+                cipher.squeeze_xor(&mut bytes);
                 bytes
             }
         }

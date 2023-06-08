@@ -34,7 +34,7 @@ pub const FR_PAYLOAD_L_MAX: usize = FR_L_MAX - FR_HEADER_L;
 
 pub const MAX_LATENCY: i64 = 3;
 
-/// equivalent to `crate::cshake::HANDSHAKE_PRE_MASK.create().once_to_array(&[])`
+/// equivalent to `crate::cshake::HANDSHAKE_PRE_MASK.once_to_array(&[])`
 pub const HANDSHAKE_PRE_MASK_BYTES: [u8; PK_L] = [
     0x50, 0xa2, 0x9a, 0x88, 0x3b, 0x5b, 0x87, 0x05, 0x15, 0x4d, 0x0e, 0x70, 0x81, 0xec, 0x6d, 0x23,
     0x8d, 0xf9, 0x36, 0x3d, 0x5f, 0x0a, 0x0f, 0x5e, 0x6d, 0x73, 0xc9, 0x2f, 0x41, 0x7a, 0x09, 0xb1,
@@ -46,9 +46,9 @@ mod tests {
 
     #[test]
     fn handshake_pre_mask() {
-        use crate::cshake::{CShakeCustom, Once, HANDSHAKE_PRE_MASK};
+        use crate::cshake::{CShakeCustom, HANDSHAKE_PRE_MASK};
         assert_eq!(HANDSHAKE_PRE_MASK::CUSTOM_STRING, "__bcsp__HANDSHAKE_PRE_MASK");
-        assert_eq!(HANDSHAKE_PRE_MASK_BYTES, HANDSHAKE_PRE_MASK.create().once_to_array(&[]));
+        assert_eq!(HANDSHAKE_PRE_MASK_BYTES, HANDSHAKE_PRE_MASK.once_to_array(&[]));
     }
 
     #[test]

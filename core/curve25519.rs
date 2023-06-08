@@ -164,7 +164,7 @@ impl XSK {
 // region: exchange sign
 
 impl SK {
-    // let hash = DSA_XSIGN_HASH.create().once_to_array(msg);
+    // let hash = DSA_XSIGN_HASH.once_to_array(msg);
     pub fn exchange_sign(&self, hash: [u8; HASH_L]) -> ExchangeSignature {
         ExchangeSignature {
             hash,

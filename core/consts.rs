@@ -47,14 +47,14 @@ mod tests {
     #[test]
     fn handshake_pre_mask() {
         use crate::cshake::{CShakeCustom, HANDSHAKE_PRE_MASK};
-        assert_eq!(HANDSHAKE_PRE_MASK::CUSTOM_STRING, "__bcsp__HANDSHAKE_PRE_MASK");
+        assert_eq!(HANDSHAKE_PRE_MASK.custom_string(), "__bcsp__HANDSHAKE_PRE_MASK".as_bytes());
         assert_eq!(HANDSHAKE_PRE_MASK_BYTES, HANDSHAKE_PRE_MASK.once_to_array(&[]));
     }
 
     #[test]
     fn message_len() {
         use foundations::byterepr::ByteRepr;
-        assert_eq!(SIGNED_PKINFO_L, crate::PKInfo::SIZE);
-        assert_eq!(SLOGINV_L, crate::LoginVerify::SIZE);
+        const _: () = assert!(SIGNED_PKINFO_L == crate::PKInfo::SIZE);
+        const _: () = assert!(SLOGINV_L == crate::LoginVerify::SIZE);
     }
 }

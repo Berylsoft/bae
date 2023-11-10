@@ -4,7 +4,7 @@ pub mod curve25519;
 
 use std::{sync::Arc, collections::BTreeMap, num::NonZeroU16};
 use zeroize::Zeroize;
-use foundations::{byterepr::ByteRepr, xor::xor_array, now::now_raw, timestamp, map_util, byterepr_structs};
+use foundations::{byterepr::ByteRepr, xor::xor_array, now::now_raw, timestamp, byterepr_structs};
 use crate::{consts::*, cshake::*, curve25519::*};
 
 byterepr_structs! {
@@ -282,7 +282,7 @@ impl ConnectionState {
 
     pub fn send_message(&mut self, req_id: NonZeroU16, msg: &[u8]) -> Vec<Vec<u8>> {
         let ts = timestamp::from_now_raw(now_raw());
-        let request = map_util::get_or_insert(&mut self.request, req_id, || {
+        let request = self.request.entry(req_id).or_insert_with(|| {
             let mut req_key = self.req_key_deriver.squeeze_to_array();
             let req = RequestState::init(&req_key);
             req_key.zeroize();

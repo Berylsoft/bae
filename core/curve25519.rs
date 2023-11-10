@@ -1,4 +1,8 @@
-use curve25519_dalek::{Scalar, EdwardsPoint, edwards::CompressedEdwardsY, MontgomeryPoint};
+use curve25519_dalek::{
+    scalar::{Scalar, clamp_integer},
+    edwards::{EdwardsPoint, CompressedEdwardsY},
+    MontgomeryPoint
+};
 use zeroize::Zeroize;
 use foundations::{byterepr::ByteRepr, byterepr_struct};
 use crate::{
@@ -7,7 +11,7 @@ use crate::{
 };
 
 pub struct XSK {
-    scalar: Scalar,
+    scalar: [u8; 32],
 }
 
 pub struct XPK {
@@ -20,7 +24,8 @@ pub struct ExchangedSecret {
 
 pub struct SK {
     key: [u8; SK_L],
-    scalar: Scalar,
+    scalar: [u8; 32],
+    scalar_reduced: Scalar,
     nonce: [u8; 32],
 }
 
@@ -118,12 +123,12 @@ impl ByteRepr for EdLikeSignature {
 
 impl XSK {
     pub fn generate(ctx: &mut CShake<DH_SK_GEN_PRNG>) -> XSK {
-        XSK { scalar: Scalar::from_bits_clamped(ctx.squeeze_to_array()) }
+        XSK { scalar: ctx.squeeze_to_array() }
     }
 
     #[inline]
     pub fn pk(&self) -> XPK {
-        XPK { montgomery: EdwardsPoint::mul_base(&self.scalar).to_montgomery() }
+        XPK { montgomery: EdwardsPoint::mul_base_clamped(self.scalar).to_montgomery() }
     }
 }
 
@@ -136,16 +141,18 @@ impl ExchangedSecret {
 impl SK {
     pub fn from_key(key: [u8; SK_L]) -> SK {
         let mut ctx = DSA_SK_DERIVE.create().chain_absorb(&key);
+        let scalar = ctx.squeeze_to_array();
         SK {
             key,
-            scalar: Scalar::from_bits_clamped(ctx.squeeze_to_array()),
+            scalar,
+            scalar_reduced: Scalar::from_bytes_mod_order(clamp_integer(scalar)),
             nonce: ctx.squeeze_to_array(),
         }
     }
 
     #[inline]
     pub fn pk(&self) -> PK {
-        PK { edwards: EdwardsPoint::mul_base(&self.scalar).compress() }
+        PK { edwards: EdwardsPoint::mul_base_clamped(self.scalar).compress() }
     }
 }
 
@@ -155,7 +162,7 @@ impl SK {
 
 impl XSK {
     pub fn exchange(self, peer_pk: XPK) -> ExchangedSecret {
-        ExchangedSecret { montgomery: self.scalar * peer_pk.montgomery }
+        ExchangedSecret { montgomery: peer_pk.montgomery.mul_clamped(self.scalar) }
     }
 }
 
@@ -168,14 +175,14 @@ impl SK {
     pub fn exchange_sign(&self, hash: [u8; HASH_L]) -> ExchangeSignature {
         ExchangeSignature {
             hash,
-            exchanged: (self.scalar * EdwardsPoint::mul_base(&Scalar::from_bits_clamped(hash))).compress().0,
+            exchanged: EdwardsPoint::mul_base_clamped(hash).mul_clamped(self.scalar).compress().0,
         }
     }
 }
 
 impl PK {
     pub fn exchange_verify(&self, ExchangeSignature { hash, exchanged }: ExchangeSignature) -> bool {
-        (Scalar::from_bits_clamped(hash) * self.edwards.decompress().unwrap()).compress().0 == exchanged
+        self.edwards.decompress().unwrap().mul_clamped(hash).compress().0 == exchanged
     }
 }
 
@@ -188,20 +195,20 @@ fn calc_k(r: &CompressedEdwardsY, pk: &PK, msg: &[u8]) -> Scalar {
     k_ctx.absorb(r.as_bytes());
     k_ctx.absorb(pk.edwards.as_bytes());
     k_ctx.absorb(msg);
-    Scalar::from_bits_clamped(k_ctx.squeeze_to_array())
+    Scalar::from_bytes_mod_order_wide(&k_ctx.squeeze_to_array())
 }
 
 fn calc_r(nonce: &[u8; 32], msg: &[u8]) -> (Scalar, CompressedEdwardsY) {
     let mut r_ctx = DSA_EDSIGN_R_HASH.create();
     r_ctx.absorb(nonce);
     r_ctx.absorb(msg);
-    let r_scalar = Scalar::from_bits_clamped(r_ctx.squeeze_to_array());
+    let r_scalar = Scalar::from_bytes_mod_order_wide(&r_ctx.squeeze_to_array());
     let r = EdwardsPoint::mul_base(&r_scalar).compress();
     (r_scalar, r)
 }
 
 fn calc_s(sk: &SK, k: &Scalar, r_scalar: &Scalar) -> Scalar {
-    (sk.scalar * k) + r_scalar
+    (k * sk.scalar_reduced) + r_scalar
 }
 
 fn calc2_r(k: &Scalar, pk: &PK, s: &Scalar) -> CompressedEdwardsY {

@@ -7,7 +7,8 @@ use zeroize::Zeroize;
 use foundations::{byterepr::ByteRepr, byterepr_struct};
 use crate::{
     consts::{PK_L, XK_L, SK_L, HASH_L, XSIG_L, EDSIG_L, C25519_PRIM_L},
-    cshake::{CShake, Absorb, Squeeze, CShakeCustom, DSA_SK_DERIVE, DSA_EDSIGN_R_HASH, DSA_EDSIGN_K_HASH, DH_SK_GEN_PRNG},
+    cshake::{CShake, Absorb, Squeeze, CShakeCustom},
+    cshake_customs::{DSA_SK_DERIVE, DSA_EDSIGN_R_HASH, DSA_EDSIGN_K_HASH, DH_SK_GEN_PRNG},
 };
 
 pub struct XSK {

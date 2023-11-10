@@ -1,12 +1,5 @@
-pub use cshake::*;
-
-cshake_customs! {
-    "__bcsp__"
-    DSA_SK_DERIVE
-    DSA_XSIGN_HASH
-    DSA_EDSIGN_R_HASH
-    DSA_EDSIGN_K_HASH
-    DH_SK_GEN_PRNG
+bae_core::cshake::cshake_customs! {
+    "BerylsoftCommonSecurityProtocol__"
     HANDSHAKE_PRE_MASK
     HANDSHAKE_CIPHER
     REQ_KEY_DERIVE

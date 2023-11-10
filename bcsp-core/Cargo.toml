@@ -1,20 +1,22 @@
 [package]
-name = "bae-core"
+name = "bcsp-core"
 version = "0.1.0"
 edition = "2021"
 authors = ["stackinspector"]
 license = "MPL-2.0"
-repository = "https://github.com/Berylsoft/bae"
+repository = "https://github.com/Berylsoft/bcsp"
 
 [lib]
-name = "bae_core"
+name = "bcsp_core"
 path = "lib.rs"
 
 [dependencies]
 zeroize = "1"
-curve25519-dalek = "4.1.1"
 foundations = { git = "https://github.com/Berylsoft/foundations", features = [
+    "xor",
+    "now",
+    "timestamp",
     "byterepr",
     "byterepr-macros",
 ] }
-cshake = { git = "https://github.com/Berylsoft/keccak-state", features = ["zeroize-on-drop"] }
+bae-core = { path = "../core" }
